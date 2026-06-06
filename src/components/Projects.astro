@@ -16,6 +16,7 @@ const query = `{
           description
           url
           stargazerCount
+          isArchived
           owner {
             login
           }
@@ -95,6 +96,7 @@ const cards = projects.map((repo: any) => {
     url: repo.url,
     lang: repo.languages.nodes.map((l: any) => l.name).join(' · ') || 'Unknown',
     stars: repo.stargazerCount,
+    archived: repo.isArchived,
   };
 });
 ---
@@ -104,19 +106,18 @@ const cards = projects.map((repo: any) => {
   <h2 class="projects-title reveal">Projects</h2>
   <div class="projects-grid">
     {cards.map((card : any) => (
-      <a
-        class={card.cardClass}
-        href={card.url}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <div class="project-icon" set:html={card.iconSvg}></div>
+      <a class={card.cardClass} href={card.url} target="_blank" rel="noopener noreferrer">
+        <div class="project-top">
+          <div class="project-icon" set:html={card.iconSvg}></div>
+          {card.archived && <span class="archived-badge">Archived</span>}
+        </div>
         <div class="project-type">{card.type}</div>
         <div class="project-name">{card.name}</div>
         <div class="project-desc">{card.desc}</div>
+        {card.archived && <p class="archived-note">This repository has been archived and is read-only.</p>}
         <div class="project-footer">
           <div class={card.langClass}>{card.lang}</div>
-          <span class="project-stars"><i class="ti-star"></i> {card.stars}</span>
+          <span class="project-stars">★ {card.stars}</span>
         </div>
       </a>
     ))}
