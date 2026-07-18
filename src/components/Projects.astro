@@ -50,6 +50,37 @@ const res = await fetch('https://api.github.com/graphql', {
 const { data } = await res.json();
 const projects = data.user.pinnedItems.nodes;
 
+const extraQuery = `{
+  user(login: "notnightsky") {
+    repositories(first: 50, privacy: PUBLIC, orderBy: {field: STARGAZERS, direction: DESC}) {
+      nodes {
+        name
+        description
+        url
+        stargazerCount
+        isArchived
+        owner { login }
+        languages(first: 4) { nodes { name } }
+        repositoryTopics(first: 5) { nodes { topic { name } } }
+      }
+    }
+  }
+}`;
+
+const extraRes = await fetch('https://api.github.com/graphql', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${import.meta.env.PUBLIC_GH_TOKEN}`,
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({ query: extraQuery }),
+});
+const { data: extraData } = await extraRes.json();
+const pinnedNames = new Set(projects.map((p: any) => p.name));
+const extraRepos = (extraData?.user?.repositories?.nodes ?? []).filter(
+  (r: any) => r && !pinnedNames.has(r.name)
+);
+
 function getType(repo: any): string {
   const topics = repo.repositoryTopics.nodes.map((n: any) => n.topic.name);
   const isOwn = repo.owner.login === 'NotNightSky';
@@ -84,7 +115,7 @@ function getLangClass(type: string): string {
   return type === 'Website' ? 'project-lang web-lang' : 'project-lang';
 }
 
-const cards = projects.map((repo: any) => {
+function repoToCard(repo: any) {
   const type = getType(repo);
   return {
     type,
@@ -98,7 +129,10 @@ const cards = projects.map((repo: any) => {
     stars: repo.stargazerCount,
     archived: repo.isArchived,
   };
-});
+}
+
+const cards = projects.map(repoToCard);
+const extraCards = extraRepos.map(repoToCard);
 ---
 
 <section id="projects">
@@ -122,4 +156,43 @@ const cards = projects.map((repo: any) => {
       </a>
     ))}
   </div>
+  {extraCards.length > 0 && (
+    <div class="projects-extra" id="projects-extra">
+      {extraCards.map((card : any) => (
+        <a class={card.cardClass} href={card.url} target="_blank" rel="noopener noreferrer">
+          <div class="project-top">
+            <div class="project-icon" set:html={card.iconSvg}></div>
+            {card.archived && <span class="archived-badge">Archived</span>}
+          </div>
+          <div class="project-type">{card.type}</div>
+          <div class="project-name">{card.name}</div>
+          <div class="project-desc">{card.desc}</div>
+          {card.archived && <p class="archived-note">This repository has been archived and is read-only.</p>}
+          <div class="project-footer">
+            <div class={card.langClass}>{card.lang}</div>
+            <span class="project-stars">★ {card.stars}</span>
+          </div>
+        </a>
+      ))}
+    </div>
+  )}
+  {extraCards.length > 0 && (
+    <button class="all-project-button" id="toggle-projects" type="button">
+      <span class="toggle-text">All Projects</span>
+      <span class="toggle-arrow">↓</span>
+    </button>
+  )}
 </section>
+
+<script>
+  const toggle = document.getElementById('toggle-projects');
+  const extra = document.getElementById('projects-extra');
+  if (toggle && extra) {
+    toggle.addEventListener('click', () => {
+      const expanded = toggle.classList.toggle('expanded');
+      extra.classList.toggle('open', expanded);
+      toggle.querySelector('.toggle-text')!.textContent = expanded ? 'Show Less' : 'All Projects';
+      toggle.querySelector('.toggle-arrow')!.textContent = expanded ? '↑' : '↓';
+    });
+  }
+</script>

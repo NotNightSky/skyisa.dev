@@ -187,6 +187,56 @@
   color: var(--muted);
 }
 
+.all-project-button {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.4rem;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 900px;
+  margin-top: 1rem;
+  color: var(--accent);
+  font-size: 0.85rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.all-project-button:hover {
+  border-color: rgba(74, 222, 128, 0.4);
+}
+
+.toggle-arrow {
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+}
+
+.projects-extra {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  width: 100%;
+  max-width: 900px;
+  text-align: left;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.7s ease, opacity 0.6s ease, margin 0.5s ease;
+  opacity: 0;
+}
+
+.projects-extra.open {
+  max-height: 9999px;
+  opacity: 1;
+  margin-top: 1rem;
+}
+
 @media (max-width: 640px) {
   #projects {
     padding: 4rem 1.5rem;
